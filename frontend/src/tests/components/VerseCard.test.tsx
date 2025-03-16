@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { VerseCard } from '../../components/VerseCard';
 import { BibleContextProvider } from '../../contexts/BibleContext';
 
+// Fix jest-dom matchers
+import '@testing-library/jest-dom';
+
 // Mock the useBible hook
 vi.mock('../../contexts/BibleContext', async () => {
   const actual = await vi.importActual('../../contexts/BibleContext');
@@ -45,33 +48,36 @@ describe('VerseCard', () => {
     expect(screen.getByText(mockVerse.reference)).toBeInTheDocument();
   });
 
-  test('handles touch events correctly', () => {
+  test('handles touch events correctly', async () => {
     render(
       <BibleContextProvider>
         <VerseCard verse={mockVerse} {...mockCallbacks} />
       </BibleContextProvider>
     );
 
-    const card = screen.getByText(mockVerse.text).closest('div');
+    // Find the root container of the card
+    const card = screen.getByTestId('verse-card-container') || screen.getByText(mockVerse.text).closest('.w-full');
     expect(card).not.toBeNull();
 
     if (card) {
+      // Verify that swipe callbacks are called
       // Simulate swipe up
       fireEvent.touchStart(card, { targetTouches: [{ clientY: 500 }] });
       fireEvent.touchMove(card, { targetTouches: [{ clientY: 300 }] });
       fireEvent.touchEnd(card);
 
-      // There's a timeout in the component, so we can't directly test the callback
-      // But we can test that the swipe transition class is applied
-      expect(card.className).toContain('animate-slide-up');
+      // Verify the callback was called
+      await new Promise(r => setTimeout(r, 300)); // Wait for animation timeout
+      expect(mockCallbacks.onSwipeUp).toHaveBeenCalledTimes(1);
       
       // Simulate swipe down
       fireEvent.touchStart(card, { targetTouches: [{ clientY: 300 }] });
       fireEvent.touchMove(card, { targetTouches: [{ clientY: 500 }] });
       fireEvent.touchEnd(card);
 
-      // Test swipe down transition
-      expect(card.className).toContain('animate-slide-down');
+      // Verify the callback was called
+      await new Promise(r => setTimeout(r, 300)); // Wait for animation timeout
+      expect(mockCallbacks.onSwipeDown).toHaveBeenCalledTimes(1);
     }
   });
 

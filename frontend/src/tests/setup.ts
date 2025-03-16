@@ -1,11 +1,10 @@
 import '@testing-library/jest-dom';
-import { vi, expect, afterEach } from 'vitest';
+import { vi, expect, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { setupServer } from 'msw/node';
-import matchers from '@testing-library/jest-dom/matchers';
+import { setupMockServer } from './mocks/server';
 
-// Add custom jest-dom matchers
-expect.extend(matchers);
+// Set up MSW server for tests
+setupMockServer();
 
 // Automatically clean up after each test
 afterEach(() => {

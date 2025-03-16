@@ -91,6 +91,7 @@ export const VerseCard: React.FC<VerseCardProps> = ({ verse, onSwipeUp, onSwipeD
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onDoubleClick={handleDoubleTap}
+      data-testid="verse-card-container"
     >
       <div className="w-full max-w-md text-center px-6">
         <div className="mb-8">

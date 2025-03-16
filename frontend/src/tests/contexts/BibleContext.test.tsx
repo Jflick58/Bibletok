@@ -2,8 +2,6 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BibleContextProvider, useBible } from '../../contexts/BibleContext';
-import { server } from '../mocks/server';
-import '../mocks/server';
 
 // Test component to expose context values
 const TestComponent = () => {

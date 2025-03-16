@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 import { BibleContextProvider } from '../contexts/BibleContext';
-import './mocks/server';
+import '@testing-library/jest-dom';
 
 describe('App Component', () => {
   beforeEach(() => {
@@ -12,7 +12,11 @@ describe('App Component', () => {
   });
 
   test('renders loading indicator when loading', async () => {
-    render(<App />);
+    render(
+      <BibleContextProvider>
+        <App />
+      </BibleContextProvider>
+    );
     
     // Loading indicator should be visible initially
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
@@ -24,7 +28,11 @@ describe('App Component', () => {
   });
 
   test('renders verse card after loading', async () => {
-    render(<App />);
+    render(
+      <BibleContextProvider>
+        <App />
+      </BibleContextProvider>
+    );
     
     // Wait for loading to complete
     await waitFor(() => {
@@ -47,7 +55,11 @@ describe('App Component', () => {
 
   test('navigation buttons work correctly', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(
+      <BibleContextProvider>
+        <App />
+      </BibleContextProvider>
+    );
     
     // Wait for loading to complete
     await waitFor(() => {
