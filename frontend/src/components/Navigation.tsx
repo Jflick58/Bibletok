@@ -15,7 +15,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   canGoDown
 }) => {
   return (
-    <div className="absolute top-1/2 right-4 transform -translate-y-1/2 flex flex-col space-y-4">
+    <div className="absolute top-1/2 right-4 transform -translate-y-1/2 flex flex-col space-y-4" data-testid="navigation">
       <button 
         onClick={onPrevious} 
         disabled={!canGoUp}
