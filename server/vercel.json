@@ -1,0 +1,20 @@
+{
+  "name": "bibletok-api",
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "dist/index.js"
+    }
+  ],
+  "env": {
+    "BIBLE_API_KEY": "@bible_api_key",
+    "NODE_ENV": "production"
+  }
+}
