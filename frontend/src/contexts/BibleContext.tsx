@@ -35,18 +35,66 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likes, setLikes] = useState<Record<string, boolean>>({});
 
+  // Free Bible Version ID
+  const FREE_BIBLE_VERSION_ID = '65eec8e0b60e656b-01';
+  
   useEffect(() => {
     const fetchBibles = async () => {
       try {
         const response = await fetch('/api/bibles');
         const data = await response.json();
         
-        if (data.bibles && data.bibles.length > 0) {
-          setAvailableBibles(data.bibles);
+        // Safer data handling - check if data.bibles is an array
+        if (data && data.bibles && Array.isArray(data.bibles) && data.bibles.length > 0) {
+          // Map API Bible objects to our frontend Bible interface with safer property access
+          const mappedBibles = data.bibles.map((apiBible: any) => {
+            // Make sure we're getting a valid object
+            if (!apiBible || typeof apiBible !== 'object') {
+              console.error('Invalid Bible object:', apiBible);
+              return null;
+            }
+            
+            return {
+              id: apiBible.id || '',
+              name: apiBible.name || '',
+              abbreviation: apiBible.abbreviation || '',
+              description: apiBible.description || '',
+              language: {
+                id: (apiBible.language && apiBible.language.id) || '',
+                name: (apiBible.language && apiBible.language.name) || '',
+                nameLocal: (apiBible.language && apiBible.language.nameLocal) || '',
+                script: (apiBible.language && apiBible.language.script) || '',
+                scriptDirection: (apiBible.language && apiBible.language.scriptDirection) || 'ltr'
+              }
+            };
+          }).filter(bible => bible !== null); // Remove any nulls
+
+          // Sort Bibles alphabetically by name
+          const sortedBibles = [...mappedBibles].sort((a, b) => {
+            // If one of them is the Free Bible Version, prioritize it
+            if (a.id === FREE_BIBLE_VERSION_ID) return -1;
+            if (b.id === FREE_BIBLE_VERSION_ID) return 1;
+            
+            // Otherwise, sort alphabetically
+            return a.name.localeCompare(b.name);
+          });
+          
+          setAvailableBibles(sortedBibles);
+          
+          // Try to get the saved Bible ID from localStorage
           const savedBibleId = localStorage.getItem('currentBible');
-          const initialBible = savedBibleId 
-            ? data.bibles.find((bible: Bible) => bible.id === savedBibleId) 
-            : data.bibles[0];
+          
+          // Find the saved Bible if available, or use Free Bible Version by default
+          let initialBible;
+          
+          if (savedBibleId) {
+            initialBible = sortedBibles.find((bible: Bible) => bible.id === savedBibleId);
+          }
+          
+          // If no saved Bible or it wasn't found, look for the Free Bible Version
+          if (!initialBible) {
+            initialBible = sortedBibles.find((bible: Bible) => bible.id === FREE_BIBLE_VERSION_ID) || sortedBibles[0];
+          }
             
           if (initialBible) {
             setCurrentBible(initialBible);
@@ -85,7 +133,18 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       const data = await response.json();
       
       if (data.verses) {
-        const versesWithBackgrounds = data.verses.map((verse: any, index: number) => ({
+        // Shuffle the verses to get random non-sequential verses
+        const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
+        
+        // Map API verses to our frontend verse interface
+        const mappedVerses = shuffledVerses.map((apiVerse: any) => ({
+          id: apiVerse.id || '',
+          reference: apiVerse.reference || '',
+          text: apiVerse.text || '',
+          copyright: apiVerse.copyright || ''
+        }));
+        
+        const versesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
           ...verse,
           backgroundGradient: backgroundGradients[index % backgroundGradients.length]
         }));
@@ -107,17 +166,52 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     setLoading(true);
     try {
-      const lastVerseId = currentVerses[currentVerses.length - 1].id;
-      const response = await fetch(`/api/verses/${currentBible.id}/after/${lastVerseId}`);
+      // Instead of fetching verses sequentially, get fresh featured verses
+      const response = await fetch(`/api/verses/${currentBible.id}`);
       const data = await response.json();
       
       if (data.verses && data.verses.length > 0) {
-        const newVersesWithBackgrounds = data.verses.map((verse: any, index: number) => ({
-          ...verse,
-          backgroundGradient: backgroundGradients[(currentVerses.length + index) % backgroundGradients.length]
-        }));
+        // Shuffle the verses to get random non-sequential verses
+        const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
-        setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
+        // Filter out verses that are already in currentVerses to avoid duplicates
+        const existingVerseIds = new Set(currentVerses.map(v => v.id));
+        const newVerses = shuffledVerses.filter(v => !existingVerseIds.has(v.id));
+        
+        if (newVerses.length === 0) {
+          // If all verses are already present, create some variation by reshuffling
+          const randomVerses = shuffledVerses.slice(0, 5);
+          
+          // Map API verses to our frontend verse interface
+          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+            id: apiVerse.id || '',
+            reference: apiVerse.reference || '',
+            text: apiVerse.text || '',
+            copyright: apiVerse.copyright || ''
+          }));
+          
+          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+            ...verse,
+            backgroundGradient: backgroundGradients[(currentVerses.length + index) % backgroundGradients.length]
+          }));
+          
+          setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
+        } else {
+          // Map API verses to our frontend verse interface
+          const mappedVerses = newVerses.map((apiVerse: any) => ({
+            id: apiVerse.id || '',
+            reference: apiVerse.reference || '',
+            text: apiVerse.text || '',
+            copyright: apiVerse.copyright || ''
+          }));
+          
+          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+            ...verse,
+            backgroundGradient: backgroundGradients[(currentVerses.length + index) % backgroundGradients.length]
+          }));
+          
+          setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
+        }
       }
     } catch (error) {
       console.error('Error fetching next verses:', error);
@@ -131,18 +225,54 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     setLoading(true);
     try {
-      const firstVerseId = currentVerses[0].id;
-      const response = await fetch(`/api/verses/${currentBible.id}/before/${firstVerseId}`);
+      // Instead of fetching verses sequentially, get fresh featured verses
+      const response = await fetch(`/api/verses/${currentBible.id}`);
       const data = await response.json();
       
       if (data.verses && data.verses.length > 0) {
-        const newVersesWithBackgrounds = data.verses.map((verse: any, index: number) => ({
-          ...verse,
-          backgroundGradient: backgroundGradients[index % backgroundGradients.length]
-        }));
+        // Shuffle the verses to get random non-sequential verses
+        const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
-        setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
-        setCurrentIndex(prev => prev + data.verses.length);
+        // Filter out verses that are already in currentVerses to avoid duplicates
+        const existingVerseIds = new Set(currentVerses.map(v => v.id));
+        const newVerses = shuffledVerses.filter(v => !existingVerseIds.has(v.id));
+        
+        if (newVerses.length === 0) {
+          // If all verses are already present, create some variation by reshuffling
+          const randomVerses = shuffledVerses.slice(0, 5);
+          
+          // Map API verses to our frontend verse interface
+          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+            id: apiVerse.id || '',
+            reference: apiVerse.reference || '',
+            text: apiVerse.text || '',
+            copyright: apiVerse.copyright || ''
+          }));
+          
+          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+            ...verse,
+            backgroundGradient: backgroundGradients[index % backgroundGradients.length]
+          }));
+          
+          setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
+          setCurrentIndex(prev => prev + randomVerses.length);
+        } else {
+          // Map API verses to our frontend verse interface
+          const mappedVerses = newVerses.slice(0, 5).map((apiVerse: any) => ({
+            id: apiVerse.id || '',
+            reference: apiVerse.reference || '',
+            text: apiVerse.text || '',
+            copyright: apiVerse.copyright || ''
+          }));
+          
+          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+            ...verse,
+            backgroundGradient: backgroundGradients[index % backgroundGradients.length]
+          }));
+          
+          setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
+          setCurrentIndex(prev => prev + mappedVerses.length);
+        }
       }
     } catch (error) {
       console.error('Error fetching previous verses:', error);

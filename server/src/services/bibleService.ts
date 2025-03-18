@@ -2,33 +2,83 @@ import axios from 'axios';
 import { Bible, Verse, BibleAPIResponse } from '../types/bible';
 import { APIError } from '../utils/errors';
 import logger from '../utils/logger';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
+// Ensure environment variables are loaded with absolute path to .env file
+const envPath = path.resolve(__dirname, '../../.env');
+dotenv.config({ path: envPath });
+
+// Get Bible API key (directly from .env file if needed)
+let API_KEY = process.env.BIBLE_API_KEY || '';
+
+// If API key not in environment, try to load it directly from .env file
+if (!API_KEY) {
+  try {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const apiKeyMatch = envContent.match(/BIBLE_API_KEY=([^\r\n]+)/);
+    if (apiKeyMatch && apiKeyMatch[1]) {
+      API_KEY = apiKeyMatch[1];
+      console.log('Loaded API key directly from file:', envPath);
+    }
+  } catch (error) {
+    console.error('Failed to load API key from .env file:', error);
+  }
+}
+
+if (!API_KEY) {
+  console.error('API key is still missing! Check your .env file.');
+} else {
+  console.log(`API key loaded successfully (length: ${API_KEY.length})`);
+}
 
 // Bible.api.bible endpoints and constants
 const API_BASE_URL = 'https://api.scripture.api.bible/v1';
-const API_KEY = process.env.BIBLE_API_KEY || '1e8feaeef5ec6e5b91a9ab886a1fa57e';
 
-// Sample featured passages for initial load
-const FEATURED_PASSAGES = [
-  'JHN.3.16', // John 3:16
-  'PSA.23', // Psalm 23
-  'PRO.3.5-PRO.3.6', // Proverbs 3:5-6
-  'MAT.6.26', // Matthew 6:26
-  'ROM.8.28', // Romans 8:28
-  'PHP.4.13', // Philippians 4:13
-  'JER.29.11', // Jeremiah 29:11
-  'PSA.19.1', // Psalm 19:1
-  'ISA.40.31', // Isaiah 40:31
-  'MAT.28.19-MAT.28.20' // Matthew 28:19-20
+// Books available in most Bible translations
+const BIBLE_BOOKS = [
+  // Old Testament
+  'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', 
+  '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 
+  'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK', 'DAN', 'HOS', 'JOL', 'AMO', 
+  'OBA', 'JON', 'MIC', 'NAM', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL',
+  // New Testament
+  'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO', 'GAL', 'EPH', 
+  'PHP', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB', 'JAS', 
+  '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV'
 ];
 
-// Configure axios instance for Bible API
-const bibleAPI = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'api-key': API_KEY,
-    'Accept': 'application/json'
+// Generate random passages to use
+const getRandomPassages = (count = 10) => {
+  const passages = [];
+  
+  for (let i = 0; i < count; i++) {
+    // Get a random book
+    const book = BIBLE_BOOKS[Math.floor(Math.random() * BIBLE_BOOKS.length)];
+    
+    // Generate random chapter (1-20) and verse (1-30)
+    // Note: This is a simplification - actual books have varying chapter/verse counts
+    const chapter = Math.floor(Math.random() * 20) + 1;
+    const verse = Math.floor(Math.random() * 30) + 1;
+    
+    passages.push(`${book}.${chapter}.${verse}`);
   }
-});
+  
+  return passages;
+};
+
+// Create a function to get a configured axios instance with the latest API key
+const getBibleAPI = () => {
+  // Recreate the axios instance each time to ensure it has the latest API key
+  return axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+      'api-key': API_KEY,
+      'Accept': 'application/json'
+    }
+  });
+};
 
 // Handle API response with proper error handling
 const handleAPIResponse = async <T>(
@@ -60,9 +110,24 @@ const handleAPIResponse = async <T>(
 // Get available Bibles
 export const getAvailableBibles = async (): Promise<Bible[]> => {
   try {
-    return await handleAPIResponse<Bible[]>(
+    // Use getBibleAPI() to ensure we have the latest API key
+    const bibleAPI = getBibleAPI();
+    
+    // Get all Bibles since the language filter might be causing issues
+    const allBibles = await handleAPIResponse<Bible[]>(
       bibleAPI.get('/bibles')
     );
+    
+    // Filter to only include English Bibles
+    const englishBibles = allBibles.filter(bible => 
+      bible.language?.id === 'eng' || 
+      bible.language?.name === 'English' ||
+      bible.language?.nameLocal === 'English'
+    );
+    
+    logger.info(`Filtered to ${englishBibles.length} English Bibles from ${allBibles.length} total Bibles`);
+    
+    return englishBibles;
   } catch (error) {
     logger.error('Failed to get available Bibles');
     throw error;
@@ -72,6 +137,9 @@ export const getAvailableBibles = async (): Promise<Bible[]> => {
 // Get a specific Bible by ID
 export const getBibleById = async (bibleId: string): Promise<Bible> => {
   try {
+    // Use getBibleAPI() to ensure we have the latest API key
+    const bibleAPI = getBibleAPI();
+    
     return await handleAPIResponse<Bible>(
       bibleAPI.get(`/bibles/${bibleId}`)
     );
@@ -81,11 +149,17 @@ export const getBibleById = async (bibleId: string): Promise<Bible> => {
   }
 };
 
-// Get featured verses for a Bible
+// Get random verses for a Bible
 export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
   try {
+    // Use getBibleAPI() to ensure we have the latest API key
+    const bibleAPI = getBibleAPI();
+    
+    // Generate random passages each time this function is called
+    const randomPassages = getRandomPassages(10);
+    
     const verses = await Promise.all(
-      FEATURED_PASSAGES.map(async (passage) => {
+      randomPassages.map(async (passage) => {
         try {
           // Extract clean text from HTML content
           const verseData = await handleAPIResponse<{
@@ -120,7 +194,7 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
     // Filter out any null values (failed requests)
     return verses.filter((verse): verse is Verse => verse !== null);
   } catch (error) {
-    logger.error(`Failed to get featured verses for Bible ${bibleId}`);
+    logger.error(`Failed to get random verses for Bible ${bibleId}`);
     throw error;
   }
 };
@@ -132,6 +206,9 @@ export const getVersesAfter = async (
   count: number = 5
 ): Promise<Verse[]> => {
   try {
+    // Use getBibleAPI() to ensure we have the latest API key
+    const bibleAPI = getBibleAPI();
+    
     // Parse the verse ID to determine book, chapter, verse
     const parts = verseId.split('.');
     if (parts.length < 3) {
@@ -213,6 +290,9 @@ export const getVersesAfter = async (
         currentChapterId = currentChapterData.next.id;
         
         try {
+          // Get fresh API instance for this request
+          const bibleAPI = getBibleAPI();
+          
           currentChapterData = await handleAPIResponse<{
             id: string;
             reference: string;
@@ -244,6 +324,9 @@ export const getVersesBefore = async (
   count: number = 5
 ): Promise<Verse[]> => {
   try {
+    // Use getBibleAPI() to ensure we have the latest API key
+    const bibleAPI = getBibleAPI();
+    
     // Parse the verse ID to determine book, chapter, verse
     const parts = verseId.split('.');
     if (parts.length < 3) {
@@ -271,6 +354,9 @@ export const getVersesBefore = async (
     
     // While we need more verses and there are more chapters
     while (results.length < count && currentChapterData) {
+      // Get fresh API instance for this request
+      const bibleAPI = getBibleAPI();
+      
       // Get the verses for this chapter
       const verses = await handleAPIResponse<{
         id: string;
@@ -292,6 +378,9 @@ export const getVersesBefore = async (
       // Get full verse content for each verse
       for (const verse of versesBefore) {
         try {
+          // Get fresh API instance for this request
+          const bibleAPI = getBibleAPI();
+          
           const verseData = await handleAPIResponse<{
             id: string;
             reference: string;
@@ -324,6 +413,9 @@ export const getVersesBefore = async (
         currentChapterId = currentChapterData.previous.id;
         
         try {
+          // Get fresh API instance for this request
+          const bibleAPI = getBibleAPI();
+          
           currentChapterData = await handleAPIResponse<{
             id: string;
             reference: string;
