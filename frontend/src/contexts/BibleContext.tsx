@@ -17,12 +17,12 @@ interface BibleContextProps {
   currentBible: Bible | null;
   currentVerses: VerseWithBackground[];
   currentIndex: number;
-  setCurrentIndex: (index: number) => void;
+  setCurrentIndex: (currentIndex: number) => void;
   fetchNextVerses: () => Promise<void>;
   fetchPreviousVerses: () => Promise<void>;
-  setCurrentBible: (bibleId: string) => void;
+  setCurrentBible: (currentBibleId: string) => void;
   likes: Record<string, boolean>;
-  toggleLike: (verseId: string) => void;
+  toggleLike: (likedVerseId: string) => void;
 }
 
 const BibleContext = createContext<BibleContextProps | undefined>(undefined);
@@ -47,7 +47,23 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Safer data handling - check if data.bibles is an array
         if (data && data.bibles && Array.isArray(data.bibles) && data.bibles.length > 0) {
           // Map API Bible objects to our frontend Bible interface with safer property access
-          const mappedBibles = data.bibles.map((apiBible: any) => {
+          // Define a more specific type for the API response
+          interface ApiBibleData {
+            id?: string;
+            name?: string; 
+            abbreviation?: string;
+            description?: string;
+            language?: {
+              id?: string;
+              name?: string;
+              nameLocal?: string;
+              script?: string;
+              scriptDirection?: string;
+            };
+            [key: string]: unknown;
+          }
+          
+          const mappedBibles = data.bibles.map((apiBible: ApiBibleData) => {
             // Make sure we're getting a valid object
             if (!apiBible || typeof apiBible !== 'object') {
               console.error('Invalid Bible object:', apiBible);
@@ -117,14 +133,8 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     localStorage.setItem('bibletok-likes', JSON.stringify(likes));
   }, [likes]);
 
-  useEffect(() => {
-    if (currentBible) {
-      localStorage.setItem('currentBible', currentBible.id);
-      fetchInitialVerses();
-    }
-  }, [currentBible]);
-
-  const fetchInitialVerses = async () => {
+  // Define fetchInitialVerses with useCallback to avoid dependency issues
+  const fetchInitialVerses = useCallback(async () => {
     if (!currentBible) return;
     
     setLoading(true);
@@ -137,16 +147,16 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
         // Map API verses to our frontend verse interface
-        const mappedVerses = shuffledVerses.map((apiVerse: any) => ({
+        const mappedVerses = shuffledVerses.map((apiVerse: Record<string, string>) => ({
           id: apiVerse.id || '',
           reference: apiVerse.reference || '',
           text: apiVerse.text || '',
           copyright: apiVerse.copyright || ''
         }));
         
-        const versesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+        const versesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
           ...verse,
-          backgroundGradient: backgroundGradients[index % backgroundGradients.length]
+          backgroundGradient: backgroundGradients[idx % backgroundGradients.length]
         }));
         
         setCurrentVerses(versesWithBackgrounds);
@@ -157,7 +167,14 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentBible]);
+
+  useEffect(() => {
+    if (currentBible) {
+      localStorage.setItem('currentBible', currentBible.id);
+      fetchInitialVerses();
+    }
+  }, [currentBible, fetchInitialVerses]);
 
   const fetchNextVerses = async () => {
     if (!currentBible || currentVerses.length === 0) return;
@@ -183,31 +200,31 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
           const randomVerses = shuffledVerses.slice(0, 5);
           
           // Map API verses to our frontend verse interface
-          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+          const mappedVerses = randomVerses.map((apiVerse: Record<string, string>) => ({
             id: apiVerse.id || '',
             reference: apiVerse.reference || '',
             text: apiVerse.text || '',
             copyright: apiVerse.copyright || ''
           }));
           
-          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+          const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
             ...verse,
-            backgroundGradient: backgroundGradients[(currentVerses.length + index) % backgroundGradients.length]
+            backgroundGradient: backgroundGradients[(currentVerses.length + idx) % backgroundGradients.length]
           }));
           
           setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
         } else {
           // Map API verses to our frontend verse interface
-          const mappedVerses = newVerses.map((apiVerse: any) => ({
+          const mappedVerses = newVerses.map((apiVerse: Record<string, string>) => ({
             id: apiVerse.id || '',
             reference: apiVerse.reference || '',
             text: apiVerse.text || '',
             copyright: apiVerse.copyright || ''
           }));
           
-          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+          const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
             ...verse,
-            backgroundGradient: backgroundGradients[(currentVerses.length + index) % backgroundGradients.length]
+            backgroundGradient: backgroundGradients[(currentVerses.length + idx) % backgroundGradients.length]
           }));
           
           setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
@@ -242,32 +259,32 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
           const randomVerses = shuffledVerses.slice(0, 5);
           
           // Map API verses to our frontend verse interface
-          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+          const mappedVerses = randomVerses.map((apiVerse: Record<string, string>) => ({
             id: apiVerse.id || '',
             reference: apiVerse.reference || '',
             text: apiVerse.text || '',
             copyright: apiVerse.copyright || ''
           }));
           
-          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+          const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
             ...verse,
-            backgroundGradient: backgroundGradients[index % backgroundGradients.length]
+            backgroundGradient: backgroundGradients[idx % backgroundGradients.length]
           }));
           
           setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
           setCurrentIndex(prev => prev + randomVerses.length);
         } else {
           // Map API verses to our frontend verse interface
-          const mappedVerses = newVerses.slice(0, 5).map((apiVerse: any) => ({
+          const mappedVerses = newVerses.slice(0, 5).map((apiVerse: Record<string, string>) => ({
             id: apiVerse.id || '',
             reference: apiVerse.reference || '',
             text: apiVerse.text || '',
             copyright: apiVerse.copyright || ''
           }));
           
-          const newVersesWithBackgrounds = mappedVerses.map((verse, index: number) => ({
+          const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
             ...verse,
-            backgroundGradient: backgroundGradients[index % backgroundGradients.length]
+            backgroundGradient: backgroundGradients[idx % backgroundGradients.length]
           }));
           
           setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
