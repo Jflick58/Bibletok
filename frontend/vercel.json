@@ -12,6 +12,6 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
-    "VITE_API_URL": "@backend_url"
+    "VITE_API_URL": ""
   }
 }
