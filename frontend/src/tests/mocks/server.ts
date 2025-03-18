@@ -102,6 +102,8 @@ export const handlers = [
 
 export const server = setupServer(...handlers);
 
+import { beforeAll, afterEach, afterAll } from 'vitest';
+
 // This needs to be imported in setup.ts to be used globally
 export const setupMockServer = () => {
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

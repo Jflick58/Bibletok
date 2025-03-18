@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Share, ExternalLink } from 'lucide-react';
+import { Heart, Share } from 'lucide-react';
 import { VerseWithBackground } from '../types/Bible';
 import { useBible } from '../contexts/BibleContext';
 
@@ -113,16 +113,6 @@ export const VerseCard: React.FC<VerseCardProps> = ({ verse, onSwipeUp, onSwipeD
             <Share className="h-8 w-8 text-white" />
             <span className="text-xs mt-1 text-white">Share</span>
           </button>
-          
-          <a 
-            href={`https://www.biblegateway.com/passage/?search=${encodeURIComponent(verse.reference)}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex flex-col items-center"
-          >
-            <ExternalLink className="h-8 w-8 text-white" />
-            <span className="text-xs mt-1 text-white">Read</span>
-          </a>
         </div>
       </div>
     </div>

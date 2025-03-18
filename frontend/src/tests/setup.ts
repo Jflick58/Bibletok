@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi, expect, afterEach, beforeAll, afterAll } from 'vitest';
+import { vi, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { setupMockServer } from './mocks/server';
 

@@ -12,8 +12,8 @@ const App: React.FC = () => {
     currentVerses, 
     currentIndex, 
     setCurrentIndex,
-    fetchNextVerses,
-    fetchPreviousVerses
+    fetchNextVerses
+    // fetchPreviousVerses is used in the TestComponent in tests
   } = useBible();
 
   useEffect(() => {

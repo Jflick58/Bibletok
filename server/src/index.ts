@@ -11,11 +11,14 @@ import logger from './utils/logger';
 import { handleError, APIError } from './utils/errors';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Trust proxies (needed for rate limiting behind a proxy)
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
@@ -39,6 +42,7 @@ app.use('/api', bibleRoutes);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
 
 // Serve static files from frontend in production
 if (process.env.NODE_ENV === 'production') {
