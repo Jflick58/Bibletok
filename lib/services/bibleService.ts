@@ -4,7 +4,8 @@ import { APIError } from '../utils/errors';
 import logger from '../utils/logger';
 
 // Environment variables will be injected by Next.js from .env.local
-const API_KEY = process.env.BIBLE_API_KEY || '';
+// Get API key as a function to ensure we always get the latest value
+const getApiKey = () => process.env.BIBLE_API_KEY || '';
 
 // Bible.api.bible endpoints and constants
 const API_BASE_URL = 'https://api.scripture.api.bible/v1';
@@ -78,11 +79,18 @@ const getRandomPassages = (count = 10) => {
 
 // Create a function to get a configured axios instance with the latest API key
 const getBibleAPI = () => {
+  const apiKey = getApiKey();
+  
+  // Log if API key is missing or empty
+  if (!apiKey) {
+    logger.warn('Bible API Key is missing or empty');
+  }
+  
   // Recreate the axios instance each time to ensure it has the latest API key
   return axios.create({
     baseURL: API_BASE_URL,
     headers: {
-      'api-key': API_KEY,
+      'api-key': apiKey,
       'Accept': 'application/json'
     }
   });
@@ -94,6 +102,12 @@ const handleAPIResponse = async <T>(
 ): Promise<T> => {
   try {
     const response = await request;
+    
+    // Validate response structure
+    if (!response || !response.data || !response.data.data) {
+      throw new Error('Invalid response structure from Bible API');
+    }
+    
     return response.data.data;
   } catch (error: any) {
     logger.error(`Bible API Error: ${error.message}`);
@@ -101,15 +115,19 @@ const handleAPIResponse = async <T>(
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      throw new APIError(
-        error.response.data?.message || 'Bible API error',
-        error.response.status
-      );
+      const statusCode = error.response.status || 500;
+      const errorMessage = error.response.data?.message || 'Bible API error';
+      
+      logger.error(`Bible API responded with status ${statusCode}: ${errorMessage}`);
+      
+      throw new APIError(errorMessage, statusCode);
     } else if (error.request) {
       // The request was made but no response was received
+      logger.error('No response received from Bible API');
       throw new APIError('No response from Bible API', 503);
     } else {
       // Something happened in setting up the request
+      logger.error(`Error setting up Bible API request: ${error.message}`);
       throw new APIError('Error setting up request', 500);
     }
   }
@@ -214,31 +232,37 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
     // Filter out any null values (failed requests) or verses with empty text
     const validVerses = verses.filter((verse): verse is Verse => 
       verse !== null && 
+      verse.text && 
       verse.text.trim().length > 0
     );
     
     // Ensure we have at least one verse, even if all fail
     if (validVerses.length === 0) {
-      return [{
-        id: `fallback-${Date.now()}`,
-        reference: "John 3:16",
-        text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
-        copyright: "This is a fallback verse when API requests fail."
-      }];
+      logger.warn(`No valid verses found for Bible ${bibleId}, using fallback`);
+      return [createFallbackVerse("John 3:16")];
     }
     
     return validVerses;
   } catch (error) {
-    logger.error(`Failed to get random verses for Bible ${bibleId}`);
-    // Return fallback verse instead of throwing
-    return [{
-      id: `fallback-${Date.now()}`,
-      reference: "John 3:16",
-      text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
-      copyright: "This is a fallback verse when API requests fail."
-    }];
+    logger.error(`Failed to get random verses for Bible ${bibleId}: ${error instanceof Error ? error.message : String(error)}`);
+    // Return fallback verses instead of throwing
+    return [
+      createFallbackVerse("John 3:16"),
+      createFallbackVerse("Psalm 23:1", "The LORD is my shepherd; I shall not want."),
+      createFallbackVerse("Proverbs 3:5-6", "Trust in the LORD with all your heart, and do not lean on your own understanding. In all your ways acknowledge him, and he will make straight your paths.")
+    ];
   }
 };
+
+// Helper function to create fallback verses
+function createFallbackVerse(reference: string, text?: string): Verse {
+  return {
+    id: `fallback-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    reference,
+    text: text || "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
+    copyright: "Fallback verse"
+  };
+}
 
 // Get verses after a specific verse ID
 export const getVersesAfter = async (
