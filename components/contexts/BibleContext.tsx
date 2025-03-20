@@ -179,7 +179,44 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     setLoading(true);
     try {
-      const response = await fetch(`/api/verses/${currentBible.id}`);
+      // Check if the Bible ID matches the Free Bible Version ID
+      const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
+      
+      // Add retry logic specifically for Free Bible Version
+      let response;
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          response = await fetch(`/api/verses/${currentBible.id}`, {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            break; // Success, exit the retry loop
+          }
+          
+          // If not successful and it's the Free Bible Version, retry
+          if (isFreeVersion) {
+            console.warn(`API request failed (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            break; // If not Free Bible Version, don't retry
+          }
+        } catch (fetchError) {
+          if (isFreeVersion && retries < maxRetries - 1) {
+            console.warn(`API request error (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            throw fetchError; // Give up and propagate the error
+          }
+        }
+      }
       
       // Safely parse JSON with error handling
       let data;
@@ -297,8 +334,44 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     setLoading(true);
     try {
-      // Instead of fetching verses sequentially, get fresh featured verses
-      const response = await fetch(`/api/verses/${currentBible.id}`);
+      // Check if the Bible ID matches the Free Bible Version ID
+      const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
+      
+      // Add retry logic specifically for Free Bible Version
+      let response;
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          response = await fetch(`/api/verses/${currentBible.id}`, {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            break; // Success, exit the retry loop
+          }
+          
+          // If not successful and it's the Free Bible Version, retry
+          if (isFreeVersion) {
+            console.warn(`Next verses request failed (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            break; // If not Free Bible Version, don't retry
+          }
+        } catch (fetchError) {
+          if (isFreeVersion && retries < maxRetries - 1) {
+            console.warn(`Next verses request error (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            throw fetchError; // Give up and propagate the error
+          }
+        }
+      }
       
       // Safely parse JSON with error handling
       let data;
@@ -365,8 +438,44 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     setLoading(true);
     try {
-      // Instead of fetching verses sequentially, get fresh featured verses
-      const response = await fetch(`/api/verses/${currentBible.id}`);
+      // Check if the Bible ID matches the Free Bible Version ID
+      const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
+      
+      // Add retry logic specifically for Free Bible Version
+      let response;
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          response = await fetch(`/api/verses/${currentBible.id}`, {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            break; // Success, exit the retry loop
+          }
+          
+          // If not successful and it's the Free Bible Version, retry
+          if (isFreeVersion) {
+            console.warn(`Previous verses request failed (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            break; // If not Free Bible Version, don't retry
+          }
+        } catch (fetchError) {
+          if (isFreeVersion && retries < maxRetries - 1) {
+            console.warn(`Previous verses request error (attempt ${retries + 1}/${maxRetries}), retrying...`);
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retrying
+          } else {
+            throw fetchError; // Give up and propagate the error
+          }
+        }
+      }
       
       // Safely parse JSON with error handling
       let data;

@@ -12,8 +12,18 @@ export async function GET(
     const count = parseInt(searchParams.get('count') || '5');
     
     const verses = await getVersesBefore(bibleId, verseId, count);
+    
+    // Validate response before sending to client
+    if (!verses || !Array.isArray(verses)) {
+      throw new Error('Invalid response from Bible service');
+    }
+    
     logger.info(`Retrieved ${verses.length} verses before ${verseId}`);
-    return NextResponse.json({ verses });
+    
+    return NextResponse.json(
+      { verses },
+      { status: 200 }
+    );
   } catch (error: any) {
     logger.error(`Failed to get verses before ${params.verseId} for Bible ${params.bibleId}: ${error.message}`);
     return NextResponse.json(

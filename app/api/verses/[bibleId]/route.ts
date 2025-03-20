@@ -26,13 +26,10 @@ export async function GET(
     
     logger.info(`Retrieved ${verses.length} featured verses for Bible ${bibleId}`);
     
-    // Return proper JSON with correct content-type
-    return new NextResponse(
-      JSON.stringify({ verses }), 
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+    // Return JSON using NextResponse.json() instead of new NextResponse() with manual JSON.stringify
+    return NextResponse.json(
+      { verses },
+      { status: 200 }
     );
   } catch (error: any) {
     logger.error(`Failed to get verses for Bible ${params.bibleId}: ${error.message}`);
