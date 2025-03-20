@@ -2,13 +2,19 @@
 
 ![BibleTok Logo](/public/images/web/apple-touch-icon.png)
 
-BibleTok is a modern, engaging Bible exploration app inspired by social media content formats. It presents Bible verses in a fun, swipeable interface while maintaining reverence for scripture.
+BibleTok is a modern, engaging Bible exploration app inspired by TikTok and [Wikitok](https://wikitok.vercle.app) It presents Bible verses in a fun, swipeable interface while maintaining reverence for scripture.
+
+## Why? 
+
+A few reasons: 
+- I'm a big fan of WikiTok and a friend suggested someone could do that but with Bible verses. 
+- I've never used Next.JS and wanted to learn it. 
+- I wanted to see how far I could get with #vibecoding. This was built using the Claude iOS App (I actually dictated the original though via voice), Github Codespaces, and Claude Code. I never actually ran this locally on a full-featured computer. Most of the development was done on iPad. 
 
 ## ✨ Features
 
 - **Verse Discovery**: Swipe through hand-picked Bible verses in an engaging format
 - **Multiple Translations**: Access various English Bible translations
-- **Verse Navigation**: Easily browse related verses
 - **Save Favorites**: Mark your favorite verses for quick access later
 - **Full PWA Support**: Install on mobile devices as a standalone app
 - **Responsive Design**: Optimized for all devices from mobile to desktop
@@ -22,7 +28,7 @@ Visit [bibletok.vercel.app](https://bibletok.vercel.app) to see the app in actio
 - **Frontend**: React.js with Next.js App Router
 - **Styling**: Tailwind CSS for responsive design
 - **State Management**: React Context API
-- **API Integration**: Bible.api.bible for scripture content
+- **API Integration**: [Scripture API](https://scripture.api.bible/) for scripture content
 - **Deployment**: Vercel for serverless hosting
 
 ## 🧰 Development
@@ -101,6 +107,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgements
 
-- Bible content provided by [API.Bible](https://scripture.api.bible)
-- Icons and design inspiration from various social media platforms
+- Bible content provided by [Scripture API](https://scripture.api.bible)
+- Icons developed using [IconKitchen](https://icon.kitchen/i/H4sIAAAAAAAAA6tWKkvMKU0tVrKqVkpJLMoOyUjNTVWySkvMKU6t1VHKzU8pzQHJRisl5qUU5WemKOkoZeYXA8ny1CSl2FoApT8%2BHkAAAAA%3D)
 - All scripture quotations are from their respective translations and copyright holders
