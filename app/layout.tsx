@@ -1,26 +1,27 @@
 import './globals.css';
 import { BibleContextProvider } from '@/components/contexts/BibleContext';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: 'BibleTok',
   description: 'Explore Bible verses in a fun, engaging format',
   icons: {
     icon: '/favicon.ico',
-    apple: '/apple-icon.png',
+    apple: '/images/ios/AppIcon@3x.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {
     title: 'BibleTok',
     statusBarStyle: 'black-translucent',
     capable: true,
-  },
-  themeColor: '#ffffff',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
   },
 };
 
