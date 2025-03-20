@@ -1,25 +1,9 @@
 {
-  "name": "bibletok-api",
   "version": 2,
   "builds": [
     {
-      "src": "dist/index.js",
+      "src": "server/index.ts",
       "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { 
-      "src": "/api/(.*)",
-      "dest": "dist/index.js"
-    },
-    { 
-      "src": "/health",
-      "dest": "dist/index.js"
-    },
-    { 
-      "src": "/(.*)",
-      "dest": "dist/index.js",
-      "check": true
     }
   ],
   "env": {
