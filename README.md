@@ -1,6 +1,6 @@
 # BibleTok
 
-![BibleTok Screenshot](/public/images/screenshot.jpeg)
+![BibleTok Screenshot](/public/screenshot.jpeg)
 
 BibleTok is a modern, engaging Bible exploration app inspired by TikTok and [Wikitok](https://wikitok.vercle.app) It presents Bible verses in a fun, swipeable interface while maintaining reverence for scripture.
 
