@@ -1,109 +1,34 @@
-# Bibletok
+# BibleTok Next.js App
 
-A TikTok-inspired application for infinitely scrolling through Bible verses. This app allows users to swipe through verses, like their favorites, and share verses with others.
-
-## Project Structure
-
-```
-Bibletok/
-├── frontend/          # React frontend application
-│   ├── public/        # Static assets
-│   ├── src/           # Source code
-│   │   ├── components/  # React components
-│   │   ├── contexts/    # React contexts for state management
-│   │   └── types/       # TypeScript interfaces
-│   └── ...            # Configuration files
-├── server/            # Express backend application
-│   ├── src/
-│   │   ├── controllers/ # API endpoint handlers
-│   │   ├── routes/      # API route definitions
-│   │   ├── services/    # Business logic and API integrations
-│   │   ├── types/       # TypeScript interfaces
-│   │   └── utils/       # Utility functions and helpers
-│   └── ...            # Configuration files
-└── ...                # Project configuration files
-```
-
-## Features
-
-- Swipe-based navigation through Bible verses
-- Multiple Bible translations support
-- Verse liking and sharing
-- Infinite scrolling with dynamic loading
-- Beautiful gradient backgrounds
-- Mobile-first responsive design
-- Fast and secure API
+This is a Next.js version of the BibleTok application, combining both the frontend and backend into a single codebase.
 
 ## Getting Started
 
-### Prerequisites
+1. Install dependencies:
+```bash
+npm install
+```
 
-- Node.js 18+ and npm
-- A Bible API key (already included in the example configuration)
-
-### Running the Backend
-
-1. Navigate to the server directory:
-   ```
-   cd server
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
+2. Set up environment variables:
+Create a `.env.local` file with the following variables:
+```
+BIBLE_API_KEY=your_api_key_here
+```
 
 3. Start the development server:
-   ```
-   npm run dev
-   ```
-
-The backend will be available at http://localhost:3000/api
-
-### Running the Frontend
-
-1. Navigate to the frontend directory:
-   ```
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Start the development server:
-   ```
-   npm run dev
-   ```
-
-The frontend will be available at http://localhost:5173
-
-## Building for Production
-
-### Backend Build
-
-```
-cd server
-npm run build
-npm start
+```bash
+npm run dev
 ```
 
-### Frontend Build
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-```
-cd frontend
-npm run build
-```
+## Features
 
-The build will be available in the `frontend/dist` directory, which is served by the backend in production mode.
+- Single codebase for both frontend and backend
+- API routes for Bible verses and information
+- React components with Tailwind CSS for styling
+- Next.js App Router for improved performance
 
-## Tech Stack
+## Deployment
 
-- **Frontend**: React, TypeScript, TailwindCSS, Vite
-- **Backend**: Node.js, Express, TypeScript
-- **External API**: Bible API (api.scripture.api.bible)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Deploy to Vercel with a simple push to your repository. Make sure to set the `BIBLE_API_KEY` environment variable in your Vercel project settings.
