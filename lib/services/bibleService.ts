@@ -22,23 +22,58 @@ const BIBLE_BOOKS = [
   '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV'
 ];
 
+// Set of well-known valid passages as fallbacks
+const KNOWN_VALID_PASSAGES = [
+  'JHN.3.16',  // John 3:16
+  'PSA.23.1',  // Psalm 23:1
+  'GEN.1.1',   // Genesis 1:1
+  'ROM.8.28',  // Romans 8:28
+  'PHP.4.13',  // Philippians 4:13
+  'MAT.11.28', // Matthew 11:28
+  'JER.29.11', // Jeremiah 29:11
+  'ROM.12.2',  // Romans 12:2
+  'PRO.3.5',   // Proverbs 3:5
+  'ISA.40.31', // Isaiah 40:31
+  'PSA.46.1',  // Psalm 46:1
+  'GAL.5.22',  // Galatians 5:22
+  'HEB.11.1',  // Hebrews 11:1
+  '2TI.3.16',  // 2 Timothy 3:16
+  'MAT.28.19', // Matthew 28:19
+  '1JN.4.19',  // 1 John 4:19
+  'PHP.4.6',   // Philippians 4:6
+  'JHN.14.6',  // John 14:6
+  'EPH.2.8',   // Ephesians 2:8
+  'ROM.5.8'    // Romans 5:8
+];
+
 // Generate random passages to use
 const getRandomPassages = (count = 10) => {
   const passages = [];
   
-  for (let i = 0; i < count; i++) {
+  // Always include some known valid passages to ensure we get at least some successful responses
+  const knownPassages = [...KNOWN_VALID_PASSAGES]
+    .sort(() => Math.random() - 0.5)  // Shuffle the array
+    .slice(0, Math.min(count / 2, KNOWN_VALID_PASSAGES.length));
+  
+  passages.push(...knownPassages);
+  
+  // Fill the rest with random passages
+  const remainingCount = count - passages.length;
+  
+  for (let i = 0; i < remainingCount; i++) {
     // Get a random book
     const book = BIBLE_BOOKS[Math.floor(Math.random() * BIBLE_BOOKS.length)];
     
-    // Generate random chapter (1-20) and verse (1-30)
-    // Note: This is a simplification - actual books have varying chapter/verse counts
-    const chapter = Math.floor(Math.random() * 20) + 1;
-    const verse = Math.floor(Math.random() * 30) + 1;
+    // Generate random chapter and verse with better constraints based on Bible structure
+    // Most books have fewer than 30 chapters, and most chapters have fewer than 40 verses
+    const chapter = Math.floor(Math.random() * 10) + 1; // Use lower chapters (1-10) which exist in all books
+    const verse = Math.floor(Math.random() * 20) + 1;   // Use lower verse numbers (1-20) which exist in most chapters
     
     passages.push(`${book}.${chapter}.${verse}`);
   }
   
-  return passages;
+  // Shuffle again to mix known and random passages
+  return passages.sort(() => Math.random() - 0.5);
 };
 
 // Create a function to get a configured axios instance with the latest API key
@@ -129,7 +164,19 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
     const bibleAPI = getBibleAPI();
     
     // Generate random passages each time this function is called
-    const randomPassages = getRandomPassages(10);
+    const randomPassages = getRandomPassages(15); // Increase count to improve chances of success
+    
+    // Safe text parsing helper function to handle unexpected formats
+    const safeParseContent = (content: string): string => {
+      try {
+        if (!content) return '';
+        
+        // Strip any HTML tags
+        return content.replace(/<\/?[^>]+(>|$)/g, '').trim();
+      } catch (e) {
+        return content || '';
+      }
+    };
     
     const verses = await Promise.all(
       randomPassages.map(async (passage) => {
@@ -152,10 +199,10 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
           );
           
           return {
-            id: verseData.id,
-            reference: verseData.reference,
-            text: verseData.content,
-            copyright: verseData.copyright
+            id: verseData.id || passage, // Fallback to passage if id is missing
+            reference: verseData.reference || passage, // Fallback to passage if reference is missing
+            text: safeParseContent(verseData.content),
+            copyright: verseData.copyright || ''
           };
         } catch (error) {
           logger.warn(`Failed to get passage ${passage} for Bible ${bibleId}`);
@@ -164,11 +211,32 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
       })
     );
     
-    // Filter out any null values (failed requests)
-    return verses.filter((verse): verse is Verse => verse !== null);
+    // Filter out any null values (failed requests) or verses with empty text
+    const validVerses = verses.filter((verse): verse is Verse => 
+      verse !== null && 
+      verse.text.trim().length > 0
+    );
+    
+    // Ensure we have at least one verse, even if all fail
+    if (validVerses.length === 0) {
+      return [{
+        id: `fallback-${Date.now()}`,
+        reference: "John 3:16",
+        text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
+        copyright: "This is a fallback verse when API requests fail."
+      }];
+    }
+    
+    return validVerses;
   } catch (error) {
     logger.error(`Failed to get random verses for Bible ${bibleId}`);
-    throw error;
+    // Return fallback verse instead of throwing
+    return [{
+      id: `fallback-${Date.now()}`,
+      reference: "John 3:16",
+      text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
+      copyright: "This is a fallback verse when API requests fail."
+    }];
   }
 };
 
