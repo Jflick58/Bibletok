@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   title: 'BibleTok',
   description: 'Explore Bible verses in a fun, engaging format',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/images/ios/AppIcon@3x.png',
+    icon: '/images/web/favicon.ico',
+    apple: '/images/web/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {
