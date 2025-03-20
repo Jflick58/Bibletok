@@ -40,7 +40,23 @@ app.use('/api', bibleRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'Server is running'
+  });
+});
+
+// Root path handler for checking server status
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'BibleTok API Server is running',
+    endpoints: {
+      health: '/health',
+      api: '/api/...'
+    }
+  });
 });
 
 
