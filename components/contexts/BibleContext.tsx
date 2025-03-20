@@ -180,30 +180,101 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     setLoading(true);
     try {
       const response = await fetch(`/api/verses/${currentBible.id}`);
-      const data = await response.json();
       
-      if (data.verses) {
+      // Safely parse JSON with error handling
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        
+        // Generate fallback verses if parsing fails
+        const fallbackVerses = [
+          {
+            id: `fallback-${Date.now()}-1`,
+            reference: "Psalm 23:1",
+            text: "The LORD is my shepherd; I shall not want.",
+            copyright: "",
+            backgroundGradient: backgroundGradients[0]
+          },
+          {
+            id: `fallback-${Date.now()}-2`,
+            reference: "John 3:16",
+            text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.",
+            copyright: "",
+            backgroundGradient: backgroundGradients[1]
+          }
+        ];
+        
+        setCurrentVerses(fallbackVerses);
+        setCurrentIndex(0);
+        setLoading(false);
+        return;
+      }
+      
+      if (data && data.verses && Array.isArray(data.verses) && data.verses.length > 0) {
         // Shuffle the verses to get random non-sequential verses
         const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
-        // Map API verses to our frontend verse interface
-        const mappedVerses = shuffledVerses.map((apiVerse: Record<string, string>) => ({
-          id: apiVerse.id || '',
-          reference: apiVerse.reference || '',
-          text: apiVerse.text || '',
-          copyright: apiVerse.copyright || ''
+        // Map API verses to our frontend verse interface with safety checks
+        const mappedVerses = shuffledVerses.map((apiVerse: any) => ({
+          id: apiVerse?.id || `fallback-${Date.now()}-${Math.random()}`,
+          reference: apiVerse?.reference || 'Bible Verse',
+          text: apiVerse?.text || 'The word of God is living and active.',
+          copyright: apiVerse?.copyright || ''
         }));
         
-        const versesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
+        // Filter out any verses with empty text
+        const validVerses = mappedVerses.filter(v => v.text && v.text.trim().length > 0);
+        
+        if (validVerses.length === 0) {
+          // Create fallback verse if all filtered out
+          validVerses.push({
+            id: `fallback-${Date.now()}`,
+            reference: "Romans 8:28",
+            text: "And we know that for those who love God all things work together for good, for those who are called according to his purpose.",
+            copyright: ""
+          });
+        }
+        
+        const versesWithBackgrounds = validVerses.map((verse, idx: number) => ({
           ...verse,
           backgroundGradient: backgroundGradients[idx % backgroundGradients.length]
         }));
         
         setCurrentVerses(versesWithBackgrounds);
         setCurrentIndex(0);
+      } else {
+        // Default fallback if no verses are returned
+        const fallbackVerses = [
+          {
+            id: `fallback-${Date.now()}-1`,
+            reference: "Proverbs 3:5-6",
+            text: "Trust in the LORD with all your heart, and do not lean on your own understanding. In all your ways acknowledge him, and he will make straight your paths.",
+            copyright: "",
+            backgroundGradient: backgroundGradients[0]
+          }
+        ];
+        
+        setCurrentVerses(fallbackVerses);
+        setCurrentIndex(0);
       }
     } catch (error) {
       console.error('Error fetching verses:', error);
+      
+      // Generate fallback verses if request fails
+      const fallbackVerses = [
+        {
+          id: `fallback-${Date.now()}-1`,
+          reference: "Isaiah 40:31",
+          text: "But they who wait for the LORD shall renew their strength; they shall mount up with wings like eagles; they shall run and not be weary; they shall walk and not faint.",
+          copyright: "",
+          backgroundGradient: backgroundGradients[0]
+        }
+      ];
+      
+      setCurrentVerses(fallbackVerses);
+      setCurrentIndex(0);
     } finally {
       setLoading(false);
     }
@@ -228,26 +299,35 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     try {
       // Instead of fetching verses sequentially, get fresh featured verses
       const response = await fetch(`/api/verses/${currentBible.id}`);
-      const data = await response.json();
       
-      if (data.verses && data.verses.length > 0) {
+      // Safely parse JSON with error handling
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        setLoading(false);
+        return;
+      }
+      
+      if (data && data.verses && Array.isArray(data.verses) && data.verses.length > 0) {
         // Shuffle the verses to get random non-sequential verses
         const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
         // Filter out verses that are already in currentVerses to avoid duplicates
         const existingVerseIds = new Set(currentVerses.map(v => v.id));
-        const newVerses = shuffledVerses.filter(v => !existingVerseIds.has(v.id));
+        const newVerses = shuffledVerses.filter(v => v && v.id && !existingVerseIds.has(v.id));
         
         if (newVerses.length === 0) {
           // If all verses are already present, create some variation by reshuffling
           const randomVerses = shuffledVerses.slice(0, 5);
           
-          // Map API verses to our frontend verse interface
-          const mappedVerses = randomVerses.map((apiVerse: Record<string, string>) => ({
-            id: apiVerse.id || '',
-            reference: apiVerse.reference || '',
-            text: apiVerse.text || '',
-            copyright: apiVerse.copyright || ''
+          // Map API verses to our frontend verse interface with safety checks
+          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+            id: apiVerse?.id || `fallback-${Date.now()}-${Math.random()}`,
+            reference: apiVerse?.reference || 'Bible Verse',
+            text: apiVerse?.text || 'The word of God is living and active.',
+            copyright: apiVerse?.copyright || ''
           }));
           
           const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
@@ -257,12 +337,12 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
           
           setCurrentVerses(prevVerses => [...prevVerses, ...newVersesWithBackgrounds]);
         } else {
-          // Map API verses to our frontend verse interface
-          const mappedVerses = newVerses.map((apiVerse: Record<string, string>) => ({
-            id: apiVerse.id || '',
-            reference: apiVerse.reference || '',
-            text: apiVerse.text || '',
-            copyright: apiVerse.copyright || ''
+          // Map API verses to our frontend verse interface with safety checks
+          const mappedVerses = newVerses.map((apiVerse: any) => ({
+            id: apiVerse?.id || `fallback-${Date.now()}-${Math.random()}`,
+            reference: apiVerse?.reference || 'Bible Verse',
+            text: apiVerse?.text || 'The word of God is living and active.',
+            copyright: apiVerse?.copyright || ''
           }));
           
           const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
@@ -287,26 +367,35 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     try {
       // Instead of fetching verses sequentially, get fresh featured verses
       const response = await fetch(`/api/verses/${currentBible.id}`);
-      const data = await response.json();
       
-      if (data.verses && data.verses.length > 0) {
+      // Safely parse JSON with error handling
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        setLoading(false);
+        return;
+      }
+      
+      if (data && data.verses && Array.isArray(data.verses) && data.verses.length > 0) {
         // Shuffle the verses to get random non-sequential verses
         const shuffledVerses = [...data.verses].sort(() => Math.random() - 0.5);
         
         // Filter out verses that are already in currentVerses to avoid duplicates
         const existingVerseIds = new Set(currentVerses.map(v => v.id));
-        const newVerses = shuffledVerses.filter(v => !existingVerseIds.has(v.id));
+        const newVerses = shuffledVerses.filter(v => v && v.id && !existingVerseIds.has(v.id));
         
         if (newVerses.length === 0) {
           // If all verses are already present, create some variation by reshuffling
           const randomVerses = shuffledVerses.slice(0, 5);
           
-          // Map API verses to our frontend verse interface
-          const mappedVerses = randomVerses.map((apiVerse: Record<string, string>) => ({
-            id: apiVerse.id || '',
-            reference: apiVerse.reference || '',
-            text: apiVerse.text || '',
-            copyright: apiVerse.copyright || ''
+          // Map API verses to our frontend verse interface with safety checks
+          const mappedVerses = randomVerses.map((apiVerse: any) => ({
+            id: apiVerse?.id || `fallback-${Date.now()}-${Math.random()}`,
+            reference: apiVerse?.reference || 'Bible Verse',
+            text: apiVerse?.text || 'The word of God is living and active.',
+            copyright: apiVerse?.copyright || ''
           }));
           
           const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
@@ -317,12 +406,12 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
           setCurrentVerses(prevVerses => [...newVersesWithBackgrounds, ...prevVerses]);
           setCurrentIndex(prev => prev + randomVerses.length);
         } else {
-          // Map API verses to our frontend verse interface
-          const mappedVerses = newVerses.slice(0, 5).map((apiVerse: Record<string, string>) => ({
-            id: apiVerse.id || '',
-            reference: apiVerse.reference || '',
-            text: apiVerse.text || '',
-            copyright: apiVerse.copyright || ''
+          // Map API verses to our frontend verse interface with safety checks
+          const mappedVerses = newVerses.slice(0, 5).map((apiVerse: any) => ({
+            id: apiVerse?.id || `fallback-${Date.now()}-${Math.random()}`,
+            reference: apiVerse?.reference || 'Bible Verse',
+            text: apiVerse?.text || 'The word of God is living and active.',
+            copyright: apiVerse?.copyright || ''
           }));
           
           const newVersesWithBackgrounds = mappedVerses.map((verse, idx: number) => ({
