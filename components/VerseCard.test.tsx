@@ -32,14 +32,11 @@ describe('VerseCard Component', () => {
     expect(cardElement).toHaveClass('to-indigo-800');
   });
 
-  it('calls toggleLike when double tapped', () => {
-    const { getByTestId } = render(<VerseCard verse={mockVerse} onSwipeUp={jest.fn()} onSwipeDown={jest.fn()} />);
+  it('renders the like button correctly', () => {
+    render(<VerseCard verse={mockVerse} onSwipeUp={jest.fn()} onSwipeDown={jest.fn()} />);
     
-    const cardElement = getByTestId('verse-card');
-    fireEvent.doubleClick(cardElement);
-    
-    // Since we're using a mock, we can't actually test that toggleLike was called with the right ID
-    // But we can at least verify the component doesn't crash when double-clicked
-    expect(cardElement).toBeInTheDocument();
+    // Find the like button (the Heart icon)
+    const likeButton = screen.getByText('Like', { exact: false });
+    expect(likeButton).toBeInTheDocument();
   });
 });

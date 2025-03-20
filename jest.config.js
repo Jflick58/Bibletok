@@ -15,6 +15,10 @@ const customJestConfig = {
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
     '^@/app/(.*)$': '<rootDir>/app/$1',
   },
+  // Set NODE_ENV to test to avoid React production mode issues
+  testEnvironmentOptions: {
+    url: "http://localhost/",
+  },
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
