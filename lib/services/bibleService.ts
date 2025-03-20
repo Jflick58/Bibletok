@@ -232,7 +232,7 @@ export const getFeaturedVerses = async (bibleId: string): Promise<Verse[]> => {
     // Filter out any null values (failed requests) or verses with empty text
     const validVerses = verses.filter((verse): verse is Verse => 
       verse !== null && 
-      verse.text && 
+      typeof verse.text === 'string' && 
       verse.text.trim().length > 0
     );
     
