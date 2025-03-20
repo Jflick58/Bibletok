@@ -183,7 +183,7 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
       
       // Add retry logic specifically for Free Bible Version
-      let response;
+      let response: Response | null = null;
       let retries = 0;
       const maxRetries = 3;
       
@@ -221,6 +221,9 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Safely parse JSON with error handling
       let data;
       try {
+        if (!response) {
+          throw new Error('API response is undefined');
+        }
         data = await response.json();
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
@@ -338,7 +341,7 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
       
       // Add retry logic specifically for Free Bible Version
-      let response;
+      let response: Response | null = null;
       let retries = 0;
       const maxRetries = 3;
       
@@ -376,6 +379,9 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Safely parse JSON with error handling
       let data;
       try {
+        if (!response) {
+          throw new Error('API response is undefined');
+        }
         data = await response.json();
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
@@ -442,7 +448,7 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       const isFreeVersion = currentBible.id === FREE_BIBLE_VERSION_ID;
       
       // Add retry logic specifically for Free Bible Version
-      let response;
+      let response: Response | null = null;
       let retries = 0;
       const maxRetries = 3;
       
@@ -480,6 +486,9 @@ export const BibleContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Safely parse JSON with error handling
       let data;
       try {
+        if (!response) {
+          throw new Error('API response is undefined');
+        }
         data = await response.json();
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
