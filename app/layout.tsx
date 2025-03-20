@@ -7,6 +7,20 @@ export const metadata: Metadata = {
   description: 'Explore Bible verses in a fun, engaging format',
   icons: {
     icon: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    title: 'BibleTok',
+    statusBarStyle: 'black-translucent',
+    capable: true,
+  },
+  themeColor: '#ffffff',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
   },
 };
 
@@ -18,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        {/* Viewport meta tag is now handled by Next.js metadata */}
       </head>
       <body className="overflow-hidden">
         <BibleContextProvider>
