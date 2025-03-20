@@ -35,9 +35,9 @@ export const Header: React.FC = () => {
           onClick={() => setIsSelectOpen(!isSelectOpen)}
           className="bg-black/40 text-white rounded-full px-3 py-1.5 text-sm backdrop-blur-sm border border-white/10 drop-shadow-lg"
         >
-          {currentBible?.name?.length > 15 
-            ? currentBible?.name.substring(0, 15) + '...' 
-            : currentBible?.name || 'Select Bible'}
+          {currentBible && currentBible.name && currentBible.name.length > 15 
+            ? currentBible.name.substring(0, 15) + '...' 
+            : (currentBible?.name || 'Select Bible')}
         </button>
         
         {isSelectOpen && (
